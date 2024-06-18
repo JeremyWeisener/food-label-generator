@@ -1,5 +1,5 @@
 :root{
-	/* --bs-heading-color: #005596 !important; */
+	
 }
 
 .bg-navy-blue{ background-color: #002D56 !important; }
@@ -12,8 +12,12 @@
 .text-navy-blue{ color: #002D56 !important; }
 .text-bright-blue{ color: #005596 !important; }
 
+code{
+	color: #D9531E !important;
+}
+
 #title{
-	font-size: 3rem;
+	font-size: 4rem;
 	line-height: 2 !important;
 	font-weight: 700 !important;
 }
@@ -61,7 +65,7 @@
 	flex-direction: row !important;
 	justify-content: space-between !important;
 	
-	font-size: calc(1.275rem + .5vw) !important;
+	font-size: calc(1.5rem + .3vw) !important;
 	padding-top: 0.5rem !important;
 	margin: 0;
 	
@@ -87,7 +91,7 @@
 	display: flex !important;
 	flex-direction: column !important;
 	
-	font-size: calc(1.275rem + .5vw) !important;
+	font-size: calc(1.5rem) !important;
 }
 #micro-nutrients div{
 	display: flex !important;

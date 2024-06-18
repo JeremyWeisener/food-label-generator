@@ -1,5 +1,5 @@
 :root{
-	/* --bs-heading-color: #005596 !important; */
+	
 }
 
 .bg-navy-blue{ background-color: #002D56 !important; }
@@ -11,6 +11,10 @@
 .text-process-black{ color: #58595B !important; }
 .text-navy-blue{ color: #002D56 !important; }
 .text-bright-blue{ color: #005596 !important; }
+
+code{
+	color: #D9531E !important;
+}
 
 #title{
 	font-size: 3rem;
