@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<configuration-properties file="keys.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9d8612bc-56ff-45e3-88a2-26ecc0196b67" basePath="/">
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a22a2a7f-a779-4599-ab68-a4fe8984a273" >
+		<http:request-connection host="/" port="8081" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="151a3174-ac9d-4c80-8d48-10ecf0a38662" >
+		<http:request-connection host="http://localhost" port="8081" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="e9fd9c56-5699-4cd3-9efe-bddcb0334bda" basePath="/fdc/v1/foods/">
+		<http:request-connection host="api.nal.usda.gov" protocol="HTTPS"/>
+	</http:request-config>
+	<flow name="styles.css" doc:id="b41c8fc2-d7be-416d-8836-7f2764992be5" >
+		<http:listener doc:name="Listener" doc:id="f2918c2b-0db5-4e52-8b25-164f70aade89" config-ref="HTTP_Listener_config" path="/styles.css"/>
+		<file:read doc:name="Read" doc:id="713c488f-dc47-4a01-938b-a29ed472d2bb" path='.\AnypointStudio\studio-workspace\nutrition\src\main\resources\styles.css'/>
+	</flow>
+	<flow name="scripts.js" doc:id="3b77f2a5-5ca1-4709-813e-9868b62ed929" >
+		<http:listener doc:name="Listener" doc:id="6a280e0b-6168-44f4-9f4c-6c86603d461c" config-ref="HTTP_Listener_config" path="/scripts.js"/>
+		<file:read doc:name="Read" doc:id="8ce76d7d-c573-49ba-a2f0-4786e57a55e9" path=".\AnypointStudio\studio-workspace\nutrition\src\main\resources\scripts.js"/>
+	</flow>
+	<flow name="index.html" doc:id="7b619bf2-75cc-4e48-9709-f3d89030f453" >
+		<http:listener doc:name="Listener" doc:id="7b4c315d-5147-4874-9119-3aade8092263" config-ref="HTTP_Listener_config" path="/" allowedMethods="GET"/>
+		<file:read doc:name="Read" doc:id="a0b0b593-e62d-4628-847f-be7fed0eb810" path='.\AnypointStudio\studio-workspace\nutrition\src\main\resources\index.html'/>
+	</flow>
+	<flow name="nutrition-flow" doc:id="e3251674-5e29-4377-b35c-ca3eadf46153" >
+		<http:listener doc:name="Listener" doc:id="dac60047-7667-49ae-944b-ff8ecc3d4ac1" config-ref="HTTP_Listener_config" path="/submit" allowedMethods="POST" outputMimeType="application/json">
+			<http:response statusCode="200" >
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Location" : payload.redirectUrl
+}]]]></http:headers>
+			</http:response>
+		</http:listener>
+		<set-variable value="#[message.payload.upc]" doc:name="Set Variable" doc:id="cd59b752-e48f-4c51-ac0f-086c9c1b04a5" variableName="upc" mimeType="text/plain"/>
+		<set-variable value="${apikeys.usda}" doc:name="Set Variable" doc:id="13bcc463-c586-4f20-be54-7a5e3bc2a0dc" variableName="apiKeyUsda"/>
+		<ee:transform doc:name="Transform Message" doc:id="e4cb2989-4096-4d63-882a-cc28d1079bb6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+message.payload.parts[0].content]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="GET" doc:name="Request" doc:id="8ea72b9c-44d8-4a05-81b2-b5f66b1a66e9" url="https://api.nal.usda.gov/fdc/v1/foods/search">
+			<http:query-params ><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"api_key": vars.apiKeyUsda,
+	"query" : vars.upc
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="5dd1a0d2-15db-4d9a-8da2-6940092bc3fe">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var firstMatch = payload.foods[0]
+var targetNutrients = {
+	"Energy" : "Calories",
+	"Total lipid (fat)" : "Total Fat",
+	"Fatty acids, total saturated" : "Saturated Fat",
+	"Fatty acids, total trans" : "Trans Fat",
+	"Fatty acids, total monounsaturated" : "Monounsaturated Fat",
+	"Fatty acids, total polyunsaturated" : "Polyunsaturated Fat",
+	"Carbohydrate, by difference" : "Carbohydrates",
+	"Total Sugars" : "Sugars",
+	"Fiber, total dietary" : "Dietary Fiber",
+	"Protein" : "Protein",
+	"Sodium, Na" : "Sodium",
+	"Cholesterol" : "Cholesterol",
+	"" : "",
+	"Calcium, Ca" : "Calcium",
+	"Vitamin D (D2 + D3), International Units" : "Vitamin D",
+	"Potassium, K" : "Potassium",
+	"Iron, Fe" : "Iron",
+	"Magnesium, Mg": "Magnesium",
+	"Phosphorus, P": "Phosphorus",
+	"Vitamin A, IU": "Vitamin A",
+	"Riboflavin" : "Riboflavin",
+	"Folate, total": "Folate",
+	"Vitamin B-12" : "Vitamin B-12",
+}
+var usdaNames = namesOf(targetNutrients)
+var usdaValues = valuesOf(targetNutrients)
+
+//var matchedNutrients = firstMatch.foodNutrients map (item, index) -> {(
+//	{	
+//		"name": item.nutrientName,
+//		"value": item.value,
+//		"unitName": item.unitName
+//	}
+//)}
+
+var matchedNutrients = firstMatch.foodNutrients filter (item) -> usdaNames contains item.nutrientName
+
+var simplifiedNutrients = matchedNutrients map (nutrient) -> {(
+	{
+		"name": usdaValues[usdaNames indexOf nutrient.nutrientName],
+		"value": nutrient.value,
+		"unitName": nutrient.unitName
+	}
+)}
+
+var queryParams = {
+	"name": firstMatch.description,
+	"upc": firstMatch.gtinUpc,
+	"ingredients": firstMatch.ingredients,
+	"owner": firstMatch.brandOwner,
+	"brand": firstMatch.brandName,
+	"servingSize": firstMatch.servingSize,
+	"servingSizeUnit": firstMatch.servingSizeUnit,
+	"householdServingSize": firstMatch.householdServingFullText,
+	"nutrition": simplifiedNutrients
+}
+//var queryNames = namesOf(queryParams)
+//var redirectUrl = "/" ++ "?" ++ encodeUri(queryParams)
+//var accUrl = "/?"
+//var redirectUrl = queryNames reduce (name, accUrl) -> {(accUrl ++ name ++ "=" ++ queryParams[name] ++ "&")}
+---
+{
+	"name": firstMatch.description,
+	"upc": firstMatch.gtinUpc,
+	"ingredients": firstMatch.ingredients,
+	"owner": firstMatch.brandOwner,
+	"brand": firstMatch.brandName,
+	"servingSize": firstMatch.servingSize,
+	"servingSizeUnit": firstMatch.servingSizeUnit,
+	"householdServingSize": firstMatch.householdServingFullText,
+	"nutrition": simplifiedNutrients
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="nutritionFlow2" doc:id="7cced382-58c4-4387-a506-648a974c853f" >
+		<http:listener doc:name="Listener" doc:id="0aba4119-e396-4e24-9e33-2c053cbaef87" config-ref="HTTP_Listener_config" path="/stfubitch"/>
+		<http:request method="GET" doc:name="Request" doc:id="c9e9de00-1d73-40e0-a312-f32b017ab70f" config-ref="HTTP_Request_configuration2" url="https://api.nal.usda.gov/fdc/v1/foods/" />
+		<file:read doc:name="Read" doc:id="84f1a545-0fc6-4c2b-b966-49843f7de300" path="C:\Users\Jeremy\AnypointStudio\studio-workspace\nutrition\src\main\resources\styles.css" />
+	</flow>
+</mule>

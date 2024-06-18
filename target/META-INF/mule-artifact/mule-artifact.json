@@ -1,0 +1,30 @@
+{
+  "configs": [
+    "nutrition.xml"
+  ],
+  "secureProperties": [],
+  "supportedJavaVersions": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:nutrition:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.7.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "application-types.xml",
+        "index.html",
+        "keys.yaml",
+        "log4j2.xml",
+        "nutrition.xml",
+        "scripts.js",
+        "styles.css"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}
